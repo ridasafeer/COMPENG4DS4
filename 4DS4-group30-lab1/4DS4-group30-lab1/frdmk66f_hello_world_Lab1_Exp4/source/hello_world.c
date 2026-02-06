@@ -73,11 +73,11 @@ void accelerometerEnable()
 status_t SPI_read(uint8_t regAddress, uint8_t *rxBuff, uint8_t rxBuffSize)
 {
 	dspi_transfer_t masterXfer;
-	uint8_t *masterTxData = (uint8_t*)malloc(rxBuffSize + 2);
+	uint8_t *masterTxData = (uint8_t*)malloc(rxBuffSize + 2); //holds X number of bytes
 	uint8_t *masterRxData = (uint8_t*)malloc(rxBuffSize + 2);
 
-	masterTxData[0] = regAddress & 0x7F; //Clear the most significant bit
-	masterTxData[1] = regAddress & 0x80; //Clear the least significant 7 bits
+	masterTxData[0] = regAddress & 0x7F; //Clear the most significant bit of first byte
+	masterTxData[1] = regAddress & 0x80; //Clear the least significant 7 bits of second byte
 
 	masterXfer.txData = masterTxData;
 	masterXfer.rxData = masterRxData;
@@ -91,6 +91,39 @@ status_t SPI_read(uint8_t regAddress, uint8_t *rxBuff, uint8_t rxBuffSize)
 	free(masterRxData);
 
 	return ret;
+}
+
+//write value to the regsiter at regAddress
+status_t SPI_write(uint8_t regAddress, uint8_t value) {
+ 
+	dspi_transfer_t masterXfer; //the transfer buffer
+	uint8_t *masterTxData = (uint8_t*)malloc(sizeof(value) + 2);
+	uint8_t *masterRxData = (uint8_t*)malloc(sizeof(value) + 2);
+
+	//BYTE 1 = COMMAND BYTE 0: 
+	//BYTE 2 = COMM BYTE 1:
+	//Address is 8 bits total, split across 2 bytes
+
+    masterTxData[0] = (regAddress & 0x7F) | 0x80;   // Set MSB = WRITE, setting the MSB byte of byte 0 to send as a write, lower bits are address[6:0]
+    masterTxData[1] = regAddress & 0x80;   // extract MSB and put it into the second byte, lower bits are 0s
+
+    memcpy(&masterTxData[2], &value, sizeof(value));
+
+    masterXfer.txData = masterTxData;
+    masterXfer.rxData = masterRxData;      // RX ignored
+    masterXfer.dataSize = sizeof(value) + 2;
+
+	masterXfer.configFlags =
+    kDSPI_MasterCtar0 |
+    kDSPI_MasterPcs0 |
+    kDSPI_MasterPcsContinuous;
+
+	status_t ret = DSPI_MasterTransferBlocking(SPI1, &masterXfer);
+
+	free(masterTxData);
+	free(masterRxData);
+	return ret;
+
 }
 
 /*!
@@ -114,6 +147,9 @@ int main(void)
 
 	SPI_read(0x0D, &byte, 1);
 	printf("The expected value is 0xC7 and the read value 0x%X\n", byte);
+
+
+	//test the SPI_write() function with WHO_AM_I reg again
 
 	while (1)
 	{
