@@ -1,0 +1,182 @@
+/*
+ * Copyright (c) 2013 - 2015, Freescale Semiconductor, Inc.
+ * Copyright 2016-2017 NXP
+ * All rights reserved.
+ * Question2 Lab 1
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include "fsl_device_registers.h"
+#include "fsl_debug_console.h"
+#include "pin_mux.h"
+#include "clock_config.h"
+#include "board.h"
+#include "fsl_uart.h"
+#include "fsl_ftm.h"
+
+/*******************************************************************************
+ * Definitions
+ ******************************************************************************/
+#define TARGET_UART UART4
+#define FTM_MOTOR FTM0
+#define FTM_CHANNEL_DC_MOTOR kFTM_Chnl_0
+#define FTM_CHANNEL_SERVO_MOTOR kFTM_Chnl_3 //CONNECTED TO ANOTHER J PIN
+
+// Experiment 3: Volatile globals
+
+//volatile char ch;
+//volatile int new_char = 0;
+
+// Problem 3:
+
+volatile uint8_t incomingByte; //will be the value of the incoming byte MINUS the MSB that identifies whether its for servo or DC motor
+
+////will operate the flags:
+volatile int newData = 0;
+volatile int rxState = 0;
+
+/*******************************************************************************
+ * Prototypes
+ ******************************************************************************/
+
+//From experiement 1: Control of PWM duy cycle
+
+void setupPWM()
+{
+	//The updated setupPWM
+
+	ftm_config_t ftmInfo;
+	ftm_chnl_pwm_signal_param_t pwmParam[2];
+
+	FTM_GetDefaultConfig(&ftmInfo);
+
+	//Init FTM0 once
+	FTM_Init(FTM_MOTOR, &ftmInfo);
+
+	//DC channel - Channel 0
+	pwmParam[0].chnlNumber = FTM_CHANNEL_DC_MOTOR;
+	pwmParam[0].level = kFTM_HighTrue;
+	pwmParam[0].dutyCyclePercent = 7;
+	pwmParam[0].firstEdgeDelayPercent = 0U;
+	pwmParam[0].enableComplementary = false;
+	pwmParam[0].enableDeadtime = false;
+
+	//Servo channel - Channel 3
+    pwmParam[1].chnlNumber = FTM_CHANNEL_SERVO_MOTOR;
+    pwmParam[1].level = kFTM_HighTrue;
+    pwmParam[1].dutyCyclePercent = 7;
+    pwmParam[1].firstEdgeDelayPercent = 0U;
+    pwmParam[1].enableComplementary = false;
+    pwmParam[1].enableDeadtime = false;
+
+	FTM_GetDefaultConfig(&ftmInfo);
+	ftmInfo.prescale = kFTM_Prescale_Divide_128;
+	FTM_Init(FTM_MOTOR, &ftmInfo);
+
+	FTM_SetupPwm(FTM_MOTOR, pwmParam, 2U, kFTM_EdgeAlignedPwm, 50U, CLOCK_GetFreq(
+	kCLOCK_BusClk));
+	FTM_StartTimer(FTM_MOTOR, kFTM_SystemClock);
+}
+
+void updatePWM_dutyCycle(ftm_chnl_t channel, float dutyCycle)
+{
+	uint32_t cnv, cnvFirstEdge = 0, mod;
+	/* The CHANNEL_COUNT macro returns -1 if it cannot match the FTM instance */
+	assert(-1 != FSL_FEATURE_FTM_CHANNEL_COUNTn(FTM_MOTOR));
+	mod = FTM_MOTOR->MOD;
+	if (dutyCycle == 0U)
+	{
+	/* Signal stays low */
+		cnv = 0;
+	}
+	else
+	{
+		cnv = mod * dutyCycle; //0.0615 starst the duty cycle? by makiug sure it doesnt enter the 0 condition?
+		/* For 100% duty cycle */
+		if (cnv >= mod)
+		{
+		cnv = mod + 1U;
+		}
+	}
+	FTM_MOTOR->CONTROLS[channel].CnV = cnv;
+
+}
+
+
+void setupUART()
+{
+	uart_config_t config;
+	UART_GetDefaultConfig(&config);
+	config.baudRate_Bps = 57600;
+	config.enableTx = true;
+	config.enableRx = true;
+	config.enableRxRTS = true;
+	config.enableTxCTS = true;
+	UART_Init(TARGET_UART, &config, CLOCK_GetFreq(kCLOCK_BusClk));
+
+	//Experiment 3: Enable Interrupts
+	UART_EnableInterrupts(TARGET_UART, kUART_RxDataRegFullInterruptEnable);
+	EnableIRQ(UART4_RX_TX_IRQn);
+}
+
+// Experiment 3: ISR code
+
+void UART4_RX_TX_IRQHandler() {
+	UART_GetStatusFlags(TARGET_UART); //just to clear the UART channel
+	incomingByte = UART_ReadByte(TARGET_UART);
+	newData = 1;
+}
+
+/*******************************************************************************
+ * Code
+ ******************************************************************************/
+/*!
+ * @brief Main function
+ */
+int main(void)
+{
+//    uint8_t DC_UARTRx;
+//    uint8_t Servo_UARTRx;
+    char txbuff[] = "Hello World\r\n";
+
+	float dutyCycle;
+	float dutyCycleServo;
+
+    /* Init board hardware. */
+    BOARD_InitBootPins();
+    BOARD_InitBootClocks();
+    BOARD_InitDebugConsole();
+
+	setupPWM();
+    setupUART();
+//    delay
+    for(volatile int i = 0U; i<1000000; i++)
+    	__asm("NOP");
+
+    //Set the duty cycles into neutral right now
+	updatePWM_dutyCycle(FTM_CHANNEL_DC_MOTOR, 0.075);
+	updatePWM_dutyCycle(FTM_CHANNEL_SERVO_MOTOR, 0.075);
+	FTM_SetSoftwareTrigger(FTM_MOTOR, true);
+
+	while(1) {
+
+		if (newData) {
+			newData = 0;
+
+			if (!rxState) { //if 0, then for DC motor
+				dutyCycle = incomingByte * 0.025f / 100.0f + 0.0615;
+				updatePWM_dutyCycle(FTM_CHANNEL_DC_MOTOR, dutyCycle);
+				FTM_SetSoftwareTrigger(FTM_MOTOR, true);
+				rxState = 1;
+				PRINTF("Setting DC Motor as %d\n", incomingByte);
+			} else { //else if 1, then for ServoMotor
+				dutyCycleServo = incomingByte * 0.025f/100.0f + 0.075;
+				updatePWM_dutyCycle(FTM_CHANNEL_SERVO_MOTOR, dutyCycleServo);
+				FTM_SetSoftwareTrigger(FTM_MOTOR, true);
+				rxState = 0;
+				PRINTF("Setting Servo Motor as %d\n", incomingByte);
+			}
+		}
+    }
+}

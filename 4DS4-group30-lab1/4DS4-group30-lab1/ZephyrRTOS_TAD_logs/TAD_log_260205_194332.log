@@ -1,0 +1,13 @@
+"Task Aware Debugger for GDB" version 11.9.0 (202311161535)
+Copyright 2016-2023 NXP
+==================================
+19:43:12.98 INFO: [ZephyrRTOS] .config file could not be read [C:\Users\safeerr\Documents\4DS4-group30-lab1\frdmk66f_hello_world\Debug\.config (The system cannot find the file specified)]
+19:43:12.98 INFO: [TadModel] DSF session ID 15 has started.
+19:43:13.478 INFO: [TadState] TAD state changed: DEBUG_STARTED -> DEBUG_INIT_0 (SUSPENDED, USER_REQUEST)
+19:43:14.86 INFO: [TadState] TAD state changed: DEBUG_INIT_0 -> DEBUG_INIT_1 (RESUMED, USER_REQUEST)
+19:43:14.99 INFO: [TadState] TAD state changed: DEBUG_INIT_1 -> DEBUG_SUSPENDED (SUSPENDED, BREAKPOINT)
+19:43:24.591 INFO: [TadState] TAD state changed: DEBUG_SUSPENDED -> DEBUG_RESUMED (RESUMED, USER_REQUEST)
+19:43:25.222 INFO: [TadState] TAD state changed: DEBUG_RESUMED -> READY (SUSPENDED, BREAKPOINT)
+19:43:30.69 INFO: [TadState] TAD state changed: READY -> DEBUG_RESUMED (RESUMED, USER_REQUEST)
+19:43:31.783 INFO: [TadState] TAD state changed: DEBUG_RESUMED -> READY (SUSPENDED, SIGNAL)
+19:43:32.812 INFO: [TadModel] DSF session ID 15 has ended.
