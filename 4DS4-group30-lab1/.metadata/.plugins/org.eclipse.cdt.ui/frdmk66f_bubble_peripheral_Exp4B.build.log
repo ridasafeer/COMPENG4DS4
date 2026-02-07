@@ -1,0 +1,11 @@
+15:28:49 **** Incremental Build of configuration Debug for project frdmk66f_bubble_peripheral_Exp4B ****
+make -r -j12 all 
+make[1]: Nothing to be done for 'main-build'.
+Performing post-build steps
+arm-none-eabi-size "frdmk66f_bubble_peripheral_Exp4B.axf"; # arm-none-eabi-objcopy -v -O binary "frdmk66f_bubble_peripheral_Exp4B.axf" "frdmk66f_bubble_peripheral_Exp4B.bin" ; # checksum -p MK66FN2M0xxx18 -d "frdmk66f_bubble_peripheral_Exp4B.bin";
+   text	   data	    bss	    dec	    hex	filename
+  22200	     16	   8480	  30696	   77e8	frdmk66f_bubble_peripheral_Exp4B.axf
+ 
+
+15:28:49 Build Finished. 0 errors, 0 warnings. (took 128ms)
+

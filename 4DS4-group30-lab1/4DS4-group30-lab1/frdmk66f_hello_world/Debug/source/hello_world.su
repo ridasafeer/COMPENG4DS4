@@ -1,6 +1,0 @@
-C:\Users\safeerr\Documents\4DS4-group30-lab1\frdmk66f_hello_world\drivers/fsl_ftm.h:731:20:FTM_StartTimer	24	static
-C:\Users\safeerr\Documents\4DS4-group30-lab1\frdmk66f_hello_world\drivers/fsl_ftm.h:1027:20:FTM_SetSoftwareTrigger	16	static
-../source/hello_world.c:34:6:setupServoPWM	56	static
-../source/hello_world.c:53:6:setupPWM	56	static
-../source/hello_world.c:72:6:updatePWM_dutyCycle	32	static
-../source/hello_world.c:98:5:main	24	static

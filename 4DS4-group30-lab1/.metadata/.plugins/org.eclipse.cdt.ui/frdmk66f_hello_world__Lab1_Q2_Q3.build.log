@@ -1,0 +1,11 @@
+15:28:50 **** Incremental Build of configuration Debug for project frdmk66f_hello_world__Lab1_Q2_Q3 ****
+make -r -j12 all 
+make[1]: Nothing to be done for 'main-build'.
+Performing post-build steps
+arm-none-eabi-size "frdmk66f_hello_world__Lab1_Q2_Q3.axf"; # arm-none-eabi-objcopy -v -O binary "frdmk66f_hello_world__Lab1_Q2_Q3.axf" "frdmk66f_hello_world__Lab1_Q2_Q3.bin" ; # checksum -p MK66FN2M0xxx18 -d "frdmk66f_hello_world__Lab1_Q2_Q3.bin";
+   text	   data	    bss	    dec	    hex	filename
+  16968	     16	   8464	  25448	   6368	frdmk66f_hello_world__Lab1_Q2_Q3.axf
+ 
+
+15:28:50 Build Finished. 0 errors, 0 warnings. (took 128ms)
+

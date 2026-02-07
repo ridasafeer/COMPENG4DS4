@@ -1,0 +1,11 @@
+15:28:52 **** Incremental Build of configuration Debug for project frdmk66f_ecompass_peripheral_Q5 ****
+make -r -j12 all 
+make[1]: Nothing to be done for 'main-build'.
+Performing post-build steps
+arm-none-eabi-size "frdmk66f_ecompass_peripheral_Q5.axf"; # arm-none-eabi-objcopy -v -O binary "frdmk66f_ecompass_peripheral_Q5.axf" "frdmk66f_ecompass_peripheral_Q5.bin" ; # checksum -p MK66FN2M0xxx18 -d "frdmk66f_ecompass_peripheral_Q5.bin";
+   text	   data	    bss	    dec	    hex	filename
+  27968	     16	   8784	  36768	   8fa0	frdmk66f_ecompass_peripheral_Q5.axf
+ 
+
+15:28:52 Build Finished. 0 errors, 0 warnings. (took 130ms)
+
